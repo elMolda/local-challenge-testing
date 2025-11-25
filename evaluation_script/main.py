@@ -1,8 +1,13 @@
 import random
+import docker
+from docker.errors import ImageNotFound, ContainerError
 
 
 def evaluate(test_annotation_file, user_submission_file, phase_codename, **kwargs):
     print("Starting Evaluation.....")
+    image_name = "hello-world"
+    tag = "latest"
+    full_image_name = f"{image_name}:{tag}"
     """
     Evaluates the submission for a particular challenge phase and returns score
     Arguments:
@@ -39,6 +44,63 @@ def evaluate(test_annotation_file, user_submission_file, phase_codename, **kwarg
             'submitted_at': u'2017-03-20T19:22:03.880652Z'
         }
     """
+    try:
+        # 1. Connect to Docker client
+        # By default, it looks for the DOCKER_HOST environment variable or
+        # common locations like /var/run/docker.sock on Linux or the DOCKER_HOST on Windows/Mac.
+        print("Connecting to Docker client...")
+        client = docker.from_env()
+        
+        # 2. Pull the image if not present (or simply to ensure it's up-to-date)
+        try:
+            print(f"Attempting to pull the image '{full_image_name}'...")
+            client.images.pull(image_name, tag=tag)
+            print("Image pulled successfully.")
+        except ImageNotFound:
+            print(f"Image '{full_image_name}' could not be found or pulled.")
+            return
+
+        # 3. Run the container
+        print(f"Running container from image '{full_image_name}'...")
+        
+        # client.containers.run() is a convenient method that:
+        # - Creates the container.
+        # - Starts it.
+        # - Waits for it to finish (due to detach=False, the default).
+        # - Collects its logs.
+        # - Returns the Container object.
+        container = client.containers.run(
+            image=full_image_name,
+            detach=True,  # Run in background to easily manage its lifecycle
+            remove=False  # Do not auto-remove yet, so we can inspect logs/status
+        )
+
+        print(f"Container started successfully. ID: {container.short_id}")
+        
+        # Wait for the container to finish and update its status
+        container.wait() 
+        
+        # Reload the container object to get the latest status
+        container.reload()
+
+        # 4. Get and decode the logs
+        print("\n[INFO] Container Output (Logs):")
+        # logs() returns raw bytes, decode them for human readability
+        logs = container.logs().decode('utf-8')
+        print(logs)
+
+        print(f"[INFO] Container finished execution. Status: {container.status}")
+        
+        # 5. Clean up: remove the container after completion
+        print(f"Removing container {container.short_id}...")
+        container.remove()
+        print("Container removed.")
+
+    except docker.errors.APIError as e:
+        print(f"Docker API Error: Could not connect to the Docker daemon. "
+                      f"Ensure Docker is running and configured correctly. Details: {e}")
+    except Exception as e:
+        print(f"An unexpected error occurred: {e}")
     output = {}
     if phase_codename == "dev":
         print("Evaluating for Dev Phase")
