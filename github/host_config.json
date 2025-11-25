@@ -1,5 +1,5 @@
 {
-	"token": "<evalai_user_auth_token>",
-	"team_pk": "<host_team_pk>",
-	"evalai_host_url": "<evalai_host_url>"
+	"token": "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJ0b2tlbl90eXBlIjoicmVmcmVzaCIsImV4cCI6MTc5NTI3MzM0MCwianRpIjoiMDdhZjJhZDJlZTZjNGE2Mzg0N2I3ODc0MTg3YzBmMWYiLCJ1c2VyX2lkIjoyfQ.Aol_IFZpZOUDq1w8o3123WbmGDgQQza6Pu2PJTtTp9w",
+	"team_pk": 1,
+	"evalai_host_url": "http://host.docker.internal:8000"
 }
