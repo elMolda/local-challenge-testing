@@ -1,10 +1,14 @@
 import random
 import docker
 from docker.errors import ImageNotFound, ContainerError
-
+import os
 
 def evaluate(test_annotation_file, user_submission_file, phase_codename, **kwargs):
     print("Starting Evaluation.....")
+    docker_host = os.environ.get('DOCKER_HOST')
+    if docker_host and 'http+docker' in docker_host:
+        del os.environ['DOCKER_HOST']
+
     image_name = "hello-world"
     tag = "latest"
     full_image_name = f"{image_name}:{tag}"
